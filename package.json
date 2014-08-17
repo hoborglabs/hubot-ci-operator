@@ -1,0 +1,23 @@
+{
+  "name": "hubo-ci-operator",
+  "version": "0.0.1",
+  "description": "CI Operator",
+  "main": "index.coffy",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Wojtek Oledzki",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "~1.9.1",
+    "coffee-script": "^1.7.1",
+    "gulp": "^3.8.7",
+    "gulp-mocha": "^0.5.2",
+    "mocha": "~1.21.4",
+    "sinon": "~1.10.3",
+    "sinon-chai": "~2.5.0"
+  }
+}

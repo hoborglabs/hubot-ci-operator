@@ -1,0 +1,24 @@
+{
+    "name": "notification-plugin",
+    "url": "job/notification-plugin/",
+    "build": {
+        "full_url": "http://localhost:8080/job/notification-plugin/48/",
+        "number": 48,
+        "phase": "FINALIZED",
+        "status": "SUCCESS",
+        "url": "job/notification-plugin/48/",
+        "scm": {
+            "url": "git@github.com:jenkinsci/notification-plugin.git",
+            "branch": "origin/master",
+            "commit": "4886d1ff4821879410f4f4a93168e6cc179a8eb3"
+        },
+        "artifacts": {
+            "notification.jar": [
+                "http://localhost:8080/job/notification-plugin/48/artifact/target/notification.jar"
+            ],
+            "notification.hpi": [
+                "http://localhost:8080/job/notification-plugin/48/artifact/target/notification.hpi"
+            ]
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+	"jenkins": {
+		"url": "http://ci.test.company.com",
+		"token": "secretToken123"
+	},
+	"repos": {
+		"baxterthehacker": {
+			"public-repo": {
+				"jenkins_jobs": {
+					"master": [
+						"public-repo-build-hash"
+					]
+				}
+			}
+		}
+	}
+}
