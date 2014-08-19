@@ -2,9 +2,9 @@ url = require('url')
 querystring = require('querystring')
 
 module.exports = (config) ->
-	new Hithub config
+	new Github config
 
-class Hithub
+class Github
 	constructor: (config) ->
 		@config = config
 		@github = @config.github.url || 'http://github.com'

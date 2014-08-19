@@ -39,7 +39,7 @@ describe('github listiner', function() {
 		beforeEach(function() {
 			var req = {
 				url: '/hubot/gh-webhook?room=testRoom',
-				body: require('../fixtures/pull_request.json')
+				body: require('../fixtures/github_pull_request.json')
 			};
 
 			// post pull request

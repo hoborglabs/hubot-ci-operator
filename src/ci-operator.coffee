@@ -44,22 +44,13 @@ class CiOperator
 		if process.env.HUBOT_CIOPERATOR_CONFIG
 			@config = require process.env.HUBOT_CIOPERATOR_CONFIG
 
-		@jenkins = new Jenkins @config
+		@jenkins = new Jenkins @robot, @config
 
 		@robot.router.post "/hubot/gh-webhook", (req, res) =>
 			@handleWebhook req, res
 
 		@robot.router.post "/hubot/jenkins-events", (req, res) =>
 			@handleJenkinsEvent req, res
-
-		@robot.hear /unicorns?/i, (msg) ->
-			msg.emote msg.random [
-				"I like unicorns!",
-				"Unicorns Rock!"
-			]
-
-		@robot.respond /open the pod bay doors/i, (msg) ->
-			msg.reply "I'm afraid I can't let you do that."
 
 	handleWebhook: (req, res) ->
 		data = req.body

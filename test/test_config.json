@@ -12,6 +12,20 @@
 					]
 				}
 			}
+		},
+		"test-organization": {
+			"test-repo-one": {
+				"jenkins_jobs": {
+					"branch_one": [
+						"job_one"
+					],
+					"branch_two": [
+						"job_one",
+						"job_two",
+						"job_three"
+					]
+				}
+			}
 		}
 	}
 }
