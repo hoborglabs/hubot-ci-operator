@@ -81,8 +81,8 @@ class CiOperator
 		room = query.room
 
 		try
-			@jenkins.announceJenkinsEvent data, (what) ->
-				res.messageRoom room, what
+			@jenkins.announceJenkinsEvent data, (what) =>
+				@robot.messageRoom room, what
 		catch error
 			@robot.messageRoom room, "Whoa, I got an error: #{error}"
 			console.log "jenkins event notifier error: #{error}. Request: #{req.body}"

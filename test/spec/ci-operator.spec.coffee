@@ -31,7 +31,6 @@ describe 'ci-operator plugin', ->
 			},
 			messageRoom: sinon.spy()
 			http: sinon.stub().returns(httpClient)
-			end: sinon.stub()
 
 		require('../../src/ci-operator')(robot);
 
@@ -45,9 +44,11 @@ describe 'ci-operator plugin', ->
 			req =
 				url: '/hubot/gh-webhook?room=testRoom'
 				body: require('../fixtures/github_pull_request.json')
+			res =
+				end: sinon.stub()
 
 			# post pull request
-			robot.router.post.getCall(0).callArgWith(1, req, robot);
+			robot.router.post.getCall(0).callArgWith(1, req, res);
 
 		it 'should notify room about new pull request', ->
 			expect(robot.messageRoom).to.be.calledWith('testRoom');
@@ -68,9 +69,11 @@ describe 'ci-operator plugin', ->
 			req =
 				url: '/hubot/jenkins-webhook?room=testRoom'
 				body: require('../fixtures/jenkins_notification.json')
+			res =
+				end: sinon.stub()
 
 			# post jenkins notification
-			robot.router.post.getCall(1).callArgWith(1, req, robot);
+			robot.router.post.getCall(1).callArgWith(1, req, res);
 
 		it 'should notify room about jenkins job result', ->
 			expect(robot.messageRoom).to.be.calledWith('testRoom');
