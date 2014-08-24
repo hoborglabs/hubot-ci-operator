@@ -3,6 +3,9 @@
 		"url": "http://ci.test.company.com",
 		"token": "secretToken123"
 	},
+	"github": {
+		"url": "http://github.test.company.com"
+	},
 	"repos": {
 		"baxterthehacker": {
 			"public-repo": {

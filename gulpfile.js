@@ -4,7 +4,7 @@ var mocha = require('gulp-mocha');
 
 var paths = {
 	scripts: [ 'src/**/*.coffee' ],
-	tests: [ 'test/spec/**/*.spec.js' ],
+	tests: [ 'test/spec/**/*.spec.js', 'test/spec/**/*.spec.coffee' ],
 };
 
 gulp.task('test', function () {
