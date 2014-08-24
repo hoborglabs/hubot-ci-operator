@@ -1,12 +1,13 @@
 url = require('url')
 querystring = require('querystring')
 
-module.exports = (config) ->
-	new Hithub config
+module.exports.create = (robot, config) ->
+	new Github robot, config
 
-class Hithub
-	constructor: (config) ->
+class Github
+	constructor: (robot, config) ->
 		@config = config
+		@robot = robot
 		@github = @config.github.url || 'http://github.com'
 
 	announcePullRequest: (data, cb) ->

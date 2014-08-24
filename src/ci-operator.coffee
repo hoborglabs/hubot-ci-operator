@@ -30,8 +30,9 @@
 #
 
 url = require('url')
-querystring = require('querystring')
-Jenkins = require('./ci/jenkins')
+querystring = require 'querystring'
+Jenkins = require './ci/jenkins'
+github = require './scm/github'
 
 module.exports = (robot) ->
 	new CiOperator robot
@@ -44,7 +45,8 @@ class CiOperator
 		if process.env.HUBOT_CIOPERATOR_CONFIG
 			@config = require process.env.HUBOT_CIOPERATOR_CONFIG
 
-		@jenkins = new Jenkins @config
+		@jenkins = Jenkins @robot, @config
+		@github = github.create @robot, @config
 
 		@robot.router.post "/hubot/gh-webhook", (req, res) =>
 			@handleWebhook req, res
@@ -52,22 +54,13 @@ class CiOperator
 		@robot.router.post "/hubot/jenkins-events", (req, res) =>
 			@handleJenkinsEvent req, res
 
-		@robot.hear /unicorns?/i, (msg) ->
-			msg.emote msg.random [
-				"I like unicorns!",
-				"Unicorns Rock!"
-			]
-
-		@robot.respond /open the pod bay doors/i, (msg) ->
-			msg.reply "I'm afraid I can't let you do that."
-
 	handleWebhook: (req, res) ->
 		data = req.body
 		query = querystring.parse(url.parse(req.url).query)
 		room = query.room
 
 		try
-			@announcePullRequest data, (what) =>
+			@github.announcePullRequest data, (what) =>
 				@robot.messageRoom room, what
 		catch error
 			@robot.messageRoom room, "Whoa, I got an error: #{error}"
@@ -95,26 +88,3 @@ class CiOperator
 			console.log "jenkins event notifier error: #{error}. Request: #{req.body}"
 
 		res.end ""
-
-	announcePullRequest: (data, cb) ->
-		if data.action == 'opened'
-			mentioned = data.pull_request.body?.match(/(^|\s)(@[\w\-\/]+)/g)
-
-			if mentioned
-				unique = (array) ->
-					output = {}
-					output[array[key]] = array[key] for key in [0...array.length]
-				value for key, value of output
-
-				mentioned = mentioned.filter (nick) ->
-				slashes = nick.match(/\//g)
-				slashes is null or slashes.length < 2
-
-				mentioned = mentioned.map (nick) -> nick.trim()
-				mentioned = unique mentioned
-
-				mentioned_line = "\nMentioned: #{mentioned.join(", ")}"
-			else
-				mentioned_line = ''
-
-		cb "New pull request \"#{data.pull_request.title}\" by #{data.pull_request.user.login}: #{data.pull_request.html_url}#{mentioned_line}"

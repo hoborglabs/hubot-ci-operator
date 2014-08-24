@@ -3,12 +3,29 @@
 		"url": "http://ci.test.company.com",
 		"token": "secretToken123"
 	},
+	"github": {
+		"url": "http://github.test.company.com"
+	},
 	"repos": {
 		"baxterthehacker": {
 			"public-repo": {
 				"jenkins_jobs": {
 					"master": [
 						"public-repo-build-hash"
+					]
+				}
+			}
+		},
+		"test-organization": {
+			"test-repo-one": {
+				"jenkins_jobs": {
+					"branch_one": [
+						"job_one"
+					],
+					"branch_two": [
+						"job_one",
+						"job_two",
+						"job_three"
 					]
 				}
 			}

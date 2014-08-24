@@ -1,5 +1,5 @@
 {
-  "name": "hubo-ci-operator",
+  "name": "hubot-ci-operator",
   "version": "0.0.1",
   "description": "CI Operator",
   "main": "index.coffy",
