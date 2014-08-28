@@ -1,3 +1,4 @@
+_ = require 'lodash'
 chai = require('chai');
 sinon = require('sinon');
 chai.use(require('sinon-chai'));
@@ -8,10 +9,9 @@ describe 'ci-operator plugin', ->
 
 	process.env.HUBOT_CIOPERATOR_CONFIG = __dirname + "/../test_config.json"
 
-	testCfg = require(process.env.HUBOT_CIOPERATOR_CONFIG);
-	jenkinsUrl = testCfg.jenkins.url;
-
 	beforeEach ->
+		testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
+
 		httpClient =
 			get: ->
 			put: ->
@@ -43,7 +43,7 @@ describe 'ci-operator plugin', ->
 		beforeEach ->
 			req =
 				url: '/hubot/gh-webhook?room=testRoom'
-				body: require('../fixtures/github_pull_request.json')
+				body: _.merge {}, require('../fixtures/github_pull_request.json')
 			res =
 				end: sinon.stub()
 
@@ -68,7 +68,7 @@ describe 'ci-operator plugin', ->
 		beforeEach ->
 			req =
 				url: '/hubot/jenkins-webhook?room=testRoom'
-				body: require('../fixtures/jenkins_notification.json')
+				body: _.merge {}, require('../fixtures/jenkins_notification.json')
 			res =
 				end: sinon.stub()
 

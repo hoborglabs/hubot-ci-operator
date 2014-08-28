@@ -9,7 +9,7 @@ var paths = {
 
 gulp.task('test', function () {
 	return gulp.src(paths.tests, {read: false})
-		.pipe(mocha({reporter: 'nyan', compilers: 'coffee:coffee-script'}))
+		.pipe(mocha({reporter: 'spec', compilers: 'coffee:coffee-script'}))
 		.on('error', function(err) {
 			console.log(err.stack);
 		});

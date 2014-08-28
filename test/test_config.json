@@ -1,7 +1,12 @@
 {
 	"jenkins": {
 		"url": "http://ci.test.company.com",
-		"token": "secretToken123"
+		"token": "secretToken123",
+		"jobs": {
+			"test-job": {
+				"phases": [ "STARTED", "COMPLETED", "FINALIZED"]
+			}
+		}
 	},
 	"github": {
 		"url": "http://github.test.company.com"

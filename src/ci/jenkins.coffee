@@ -11,11 +11,26 @@ class Jenkins
 		@jenkinsUrl = @config.jenkins.url
 
 	announceJenkinsEvent: (data, cb) ->
-		statusMap = {
-			SUCCESS: 'successful'
-		};
+		unless @config.jenkins.jobs[data.name]
+			return cb ''
 
-		cb "Jenkins job #{data.name} finished #{statusMap[data.build.status]}. #{data.build.full_url}"
+		unless data.build.phase in @config.jenkins.jobs[data.name].phases
+			return cb ''
+
+		if 'STARTED' == data.build.phase
+			return cb "Jenkins job #{data.name} started. #{data.build.full_url}"
+
+		if 'FINALIZED' == data.build.phase
+			statusMap = {
+				SUCCESS: 'successful'
+			};
+
+			return cb "Jenkins job #{data.name} finished #{statusMap[data.build.status]}. #{data.build.full_url}"
+
+		if 'COMPLETED' == data.build.phase
+			return cb "Jenkins job #{data.name} completed. #{data.build.full_url}"
+
+		cb ""
 
 	notifyJenkins: (data, robot, cb) ->
 		if data.action != 'opened'
