@@ -1,39 +1,30 @@
 {
 	"jenkins": {
 		"url": "http://ci.test.company.com",
-		"token": "secretToken123",
-		"jobs": {
-			"test-job": {
-				"phases": [ "STARTED", "COMPLETED", "FINALIZED"]
-			}
-		}
+		"token": "secretToken123"
 	},
 	"github": {
 		"url": "http://github.test.company.com"
 	},
-	"repos": {
-		"baxterthehacker": {
-			"public-repo": {
-				"jenkins_jobs": {
-					"master": [
-						"public-repo-build-hash"
-					]
-				}
+	"jobs": [
+		{
+			"name": "test job",
+			"jenkins": {
+				"job": "test-job",
+				"phases": [ "STARTED", "COMPLETED", "FINALIZED"]
 			}
 		},
-		"test-organization": {
-			"test-repo-one": {
-				"jenkins_jobs": {
-					"branch_one": [
-						"job_one"
-					],
-					"branch_two": [
-						"job_one",
-						"job_two",
-						"job_three"
-					]
-				}
+		{
+			"name": "test repo one",
+			"jenkins": {
+				"job": "job_one",
+				"token": "token321"
+			},
+			"github": {
+				"name": "test-organization/test-repo-one",
+				"branches": [ "branch_one" ],
+				"pull_requests": [ "opened", "closed" ]
 			}
 		}
-	}
+	]
 }

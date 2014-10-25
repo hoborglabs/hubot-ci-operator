@@ -1,1 +1,5 @@
+# build
 node_modules
+
+# IDEs, etc
+.DS_STORE

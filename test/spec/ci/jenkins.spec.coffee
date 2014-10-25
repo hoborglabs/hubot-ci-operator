@@ -3,174 +3,161 @@ sinon = require('sinon');
 chai.use(require('sinon-chai'));
 expect = chai.expect;
 _ = require 'lodash'
+configHelper = require '../../config'
+createJenkins = require('../../../src/ci/jenkins').create
 
 describe 'Jenkins listiner', () ->
 	jenkins = null;
-	robot = null;
+	http = null;
+	testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
 
 	process.env.HUBOT_CIOPERATOR_CONFIG = __dirname + "/../../test_config.json"
 
-	beforeEach () ->
+	describe 'when Jenkins job "test-job" exists', ->
+		beforeEach () ->
+			httpBuild =
+				get: ->
+			sinon.stub(httpBuild, 'get').returns(
+				(cb) -> cb(
+					null,
+					{ getHeader: sinon.stub().returns('http://192.168.1.129:5080/jenkins/queue/item/5/')},
+					''
+				);
+			);
 
-		testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
+			httpQueue =
+				get: ->
+			sinon.stub(httpQueue, 'get').returns( (cb) -> cb(null, {}, {
+				executable:
+					number: 51,
+					url: 'http://192.168.1.129:5080/jenkins/job/test-job/51/'
+			}));
 
-		httpClient =
-			get: ->
-			put: ->
-			post: ->
-			header: ->
-			query: ->
-			path: ->
+			httpJobRun =
+				get: ->
+			sinon.stub(httpJobRun, 'get').returns( (cb) -> cb(null, {}, {
+				number: 51
+				duration: 5134,
+				url: 'http://192.168.1.129:5080/jenkins/job/test-job/51/',
+			}));
 
-		sinon.stub(httpClient, method).returns(httpClient) for method in [ "header", "query", "path" ]
-		sinon.stub(httpClient, method).returns( (cb) -> cb(null, null, null); ) for method in [ "get", "post", "put" ]
+			http = sinon.stub()
+			http.withArgs(sinon.match(/.*\/job\/test-job\/build.*/)).returns(httpBuild)
+			http.withArgs(sinon.match(/.*\/queue\/item\/5\/api\/json/)).returns(httpQueue)
+			http.withArgs(sinon.match(/.*\/job\/test-job\/51\/api\/json/)).returns(httpJobRun)
 
-		robot = {
-			respond: sinon.spy(),
-			hear: sinon.spy(),
-			router: {
-				post: sinon.stub()
-			},
-			messageRoom: sinon.spy(),
-			http: sinon.stub().returns(httpClient),
-		};
+			jenkins = createJenkins(http, testCfg);
 
-		jenkins = require('../../../src/ci/jenkins')(robot, testCfg);
+		it 'should start a new job', (done) ->
+			jenkins.build('test-job', {}, (err, data) ->
+				expect(err).to.be.null
+				expect(data).to.contain.key('number')
+				expect(data.number).to.be.equals(51)
+				done()
+			)
 
-	it 'should announce Jenkins Event', () ->
-		cb = sinon.spy();
-		data = _.merge {}, require('../../fixtures/jenkins_notification.json');
-		data.build.phase = 'FINALIZED'
-		jenkins.announceJenkinsEvent(data, cb);
+		it 'should get job data', (done) ->
+			jenkins.getJobRun('test-job', 51, (err, data) ->
+				expect(err).to.be.null
+				expect(data).to.contain.key('number')
+				expect(data.number).to.be.equals(51)
+				done()
+			)
 
-		expect(cb).to.be.called;
-		expect(cb.getCall(0).args[0]).to.contain('test-job');
-		expect(cb.getCall(0).args[0]).to.contain('finished successful');
+	phasesTests = [
+		{
+			phases: [ 'STARTED' ]
+			ok: [ { phase: 'STARTED', text: 'started' } ]
+			notOk: [ 'COMPLETED', 'FINALIZED' ]
+		},
+		{
+			phases: [ 'COMPLETED' ]
+			ok: [ { phase: 'COMPLETED', text: 'completed' } ]
+			notOk: [ 'STARTED', 'FINALIZED' ]
+		},
+		{
+			phases: [ 'FINALIZED' ]
+			ok: [ { phase: 'FINALIZED', text: 'finished' } ]
+			notOk: [ 'STARTED', 'COMPLETED' ]
+		},
+		{
+			phases: [ 'all' ]
+			ok: [ { phase: 'STARTED', text: 'started' },
+				{ phase: 'COMPLETED', text: 'completed' },
+				{ phase: 'FINALIZED', text: 'finished' } ]
+			notOk: [ ]
+		}
+	]
 
-	describe 'when phase job configuration specify "STARTED" phase', ->
-		`var jenkins`
+	phasesTests.forEach (test) ->
+		describe "when phase job configuration specify '#{test.phases}' phase", ->
+			beforeEach ->
+				testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
+				finder = configHelper.jenkinsJobFinder 'test-job'
+				finder(testCfg).jenkins.phases = test.phases
 
-		testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
-		testCfg.jenkins.jobs["test-job"].phases = [ "STARTED" ]
-		jenkins = require('../../../src/ci/jenkins')(robot, testCfg);
+				httpClient =
+					get: ->
+					put: ->
+					post: ->
+					header: ->
+					query: ->
+					path: ->
 
-		it 'should announce "STARTED" events', ->
-			cb = sinon.spy();
-			data = _.merge {}, require('../../fixtures/jenkins_notification.json');
-			data.build.phase = 'STARTED'
+				sinon.stub(httpClient, method).returns(httpClient) for method in [ "header", "query", "path" ]
+				sinon.stub(httpClient, method).returns( (cb) -> cb(null, null, null); ) for method in [ "get", "post", "put" ]
 
-			jenkins.announceJenkinsEvent(data, cb);
+				http = sinon.stub().returns(httpClient)
+				jenkins = createJenkins(http, testCfg);
 
-			expect(cb).to.be.called;
-			expect(cb.getCall(0).args[0]).to.contain('test-job');
-			expect(cb.getCall(0).args[0]).to.contain('started');
+			test.ok.forEach (phase) ->
+				it "should announce '#{phase.phase}' events", ->
+					cb = sinon.spy();
+					data = _.merge {}, require('../../fixtures/jenkins_notification.json');
+					data.build.phase = phase.phase
 
-		it 'should not announce other events', ->
-			cb = sinon.spy();
-			data = _.merge {}, require('../../fixtures/jenkins_notification.json');
+					jenkins.announceJenkinsEvent(data, cb);
 
-			data.build.phase = "COMPLETED"
-			jenkins.announceJenkinsEvent(data, cb);
+					expect(cb).to.be.called;
+					expect(cb.getCall(0).args[0]).to.contain('test-job');
+					expect(cb.getCall(0).args[0]).to.contain(phase.text);
 
-			data.build.phase = "FINALIZED"
-			jenkins.announceJenkinsEvent(data, cb);
+			for phase in test.notOk
+				it "should not announce '#{phase}' event", ->
+					cb = sinon.spy();
+					data = _.merge {}, require('../../fixtures/jenkins_notification.json');
 
-			expect(cb).to.be.called;
-			expect(cb.getCall(0).args[0]).to.be.empty
+					data.build.phase = phase
+					jenkins.announceJenkinsEvent(data, cb);
 
-	describe 'when phase job configuration specify "COMPLETED" phase', ->
-		`var jenkins`
-
-		testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
-		testCfg.jenkins.jobs["test-job"].phases = [ "COMPLETED" ]
-		jenkins = require('../../../src/ci/jenkins')(robot, testCfg);
-
-		it 'should announce "COMPLETED" events', ->
-			cb = sinon.spy();
-			data = _.merge {}, require('../../fixtures/jenkins_notification.json');
-			data.build.phase = 'COMPLETED'
-
-			jenkins.announceJenkinsEvent(data, cb);
-
-			expect(cb).to.be.called;
-			expect(cb.getCall(0).args[0]).to.contain('test-job');
-			expect(cb.getCall(0).args[0]).to.contain('completed');
-
-		it 'should not announce other events', ->
-			cb = sinon.spy();
-			data = _.merge {}, require('../../fixtures/jenkins_notification.json');
-
-			data.build.phase = "STARTED"
-			jenkins.announceJenkinsEvent(data, cb);
-
-			data.build.phase = "FINALIZED"
-			jenkins.announceJenkinsEvent(data, cb);
-
-			expect(cb).to.be.called;
-			expect(cb.getCall(0).args[0]).to.be.empty
-
-	describe 'when phase job configuration specify "FINALIZED" phase', ->
-		`var jenkins`
-
-		testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
-		testCfg.jenkins.jobs["test-job"].phases = [ "FINALIZED" ]
-		jenkins = require('../../../src/ci/jenkins')(robot, testCfg);
-
-		it 'should announce "FINALIZED" events', ->
-			cb = sinon.spy();
-			data = _.merge {}, require('../../fixtures/jenkins_notification.json');
-			data.build.phase = 'FINALIZED'
-
-			jenkins.announceJenkinsEvent(data, cb);
-
-			expect(cb).to.be.called;
-			expect(cb.getCall(0).args[0]).to.contain('test-job');
-			expect(cb.getCall(0).args[0]).to.contain('finished');
-
-		it 'should not announce other events', ->
-			cb = sinon.spy();
-			data = _.merge {}, require('../../fixtures/jenkins_notification.json');
-
-			data.build.phase = "STARTED"
-			jenkins.announceJenkinsEvent(data, cb);
-
-			data.build.phase = "COMPLETED"
-			jenkins.announceJenkinsEvent(data, cb);
-
-			expect(cb).to.be.called;
-			expect(cb.getCall(0).args[0]).to.be.empty
-
-	describe 'when multiple jobs are configured', () ->
-
-		it 'should start each job', () ->
-			cb = sinon.spy();
-			data = _.merge {}, require('../../fixtures/github_pull_request.json');
-			jenkins.notifyJenkins(data, robot, cb);
+					expect(cb).to.be.called;
+					expect(cb.getCall(0).args[0]).to.be.empty
 
 	describe 'when job is not in the config', ->
 		data = _.merge {}, require('../../fixtures/jenkins_notification.json');
 		data.name = 'not-exisitng-job'
 
-		it 'should ignore started notifications', ->
+		it 'should ignore all notifications', ->
 			cb = sinon.spy();
+
 			data.build.phase = 'STARTED'
 			jenkins.announceJenkinsEvent(data, cb);
 
-			expect(cb).to.be.called;
-			expect(cb.getCall(0).args[0]).to.be.empty
-
-		it 'should ignore completed notifications', ->
-			cb = sinon.spy();
 			data.build.phase = 'COMPLETED'
 			jenkins.announceJenkinsEvent(data, cb);
 
-			expect(cb).to.be.called;
-			expect(cb.getCall(0).args[0]).to.be.empty
-
-		it 'should ignore finalised notifications', ->
-			cb = sinon.spy();
 			data.build.phase = 'FINALIZED'
 			jenkins.announceJenkinsEvent(data, cb);
 
-			expect(cb).to.be.called;
+			expect(cb).to.be.called
 			expect(cb.getCall(0).args[0]).to.be.empty
+			expect(cb.getCall(1).args[0]).to.be.empty
+			expect(cb.getCall(2).args[0]).to.be.empty
+
+	describe 'on github notification', () ->
+		data = _.merge {}, require('../../fixtures/github_pull_request.json');
+
+		it 'should start each job', () ->
+			cb = sinon.spy();
+			data = _.merge {}, require('../../fixtures/github_pull_request.json');
+			jenkins.notifyJenkinsAboutPullRequest(data, {}, cb);

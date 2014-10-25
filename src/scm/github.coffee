@@ -31,4 +31,6 @@ class Github
 			else
 				mentioned_line = ''
 
-		cb "New pull request \"#{data.pull_request.title}\" by #{data.pull_request.user.login}: #{data.pull_request.html_url}#{mentioned_line}"
+			return cb "New pull request \"#{data.pull_request.title}\" by #{data.pull_request.user.login}: #{data.pull_request.html_url}#{mentioned_line}"
+
+		cb ""

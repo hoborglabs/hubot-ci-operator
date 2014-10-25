@@ -31,7 +31,7 @@
 
 url = require('url')
 querystring = require 'querystring'
-Jenkins = require './ci/jenkins'
+jenkins = require './ci/jenkins'
 github = require './scm/github'
 
 module.exports = (robot) ->
@@ -45,7 +45,7 @@ class CiOperator
 		if process.env.HUBOT_CIOPERATOR_CONFIG
 			@config = require process.env.HUBOT_CIOPERATOR_CONFIG
 
-		@jenkins = Jenkins @robot, @config
+		@jenkins = jenkins.create @robot.http, @config
 		@github = github.create @robot, @config
 
 		@robot.router.post "/hubot/gh-webhook", (req, res) =>
@@ -53,6 +53,11 @@ class CiOperator
 
 		@robot.router.post "/hubot/jenkins-events", (req, res) =>
 			@handleJenkinsEvent req, res
+
+		@robot.respond /build (?: job)(.*)/, (msg) =>
+			jobName = msg.match[0]
+			@jenkins.buildJob jobName, (what) ->
+				msg.send what
 
 	handleWebhook: (req, res) ->
 		data = req.body
@@ -67,11 +72,11 @@ class CiOperator
 			console.log "github pull request notifier error: #{error}. Request: #{req.body}"
 
 		try
-			@jenkins.notifyJenkins data, @robot, (what) =>
+			@jenkins.notifyJenkinsAboutPullRequest data, @robot, (what) =>
 				@robot.messageRoom room, what
 		catch error
 			@robot.messageRoom room, "Whoa, I got an error: #{error}"
-			console.log "github pull request notifier error: #{error}. Request: #{req.body}"
+			console.log "jenkins notifier error: #{error}. Request: #{req.body}"
 
 		res.end ""
 
