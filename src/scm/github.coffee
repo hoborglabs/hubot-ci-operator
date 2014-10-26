@@ -11,6 +11,9 @@ class Github
 		@github = @config.github.url || 'http://github.com'
 
 	announcePullRequest: (data, cb) ->
+		if data.action == 'updated'
+			cb "Updated pull request \"#{data.pull_request.title}\" by #{data.pull_request.user.login}: #{data.pull_request.html_url}#{mentioned_line}"
+
 		if data.action == 'opened'
 			mentioned = data.pull_request.body?.match(/(^|\s)(@[\w\-\/]+)/g)
 

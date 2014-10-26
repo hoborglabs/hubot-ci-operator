@@ -153,11 +153,3 @@ describe 'Jenkins listiner', () ->
 			expect(cb.getCall(0).args[0]).to.be.empty
 			expect(cb.getCall(1).args[0]).to.be.empty
 			expect(cb.getCall(2).args[0]).to.be.empty
-
-	describe 'on github notification', () ->
-		data = _.merge {}, require('../../fixtures/github_pull_request.json');
-
-		it 'should start each job', () ->
-			cb = sinon.spy();
-			data = _.merge {}, require('../../fixtures/github_pull_request.json');
-			jenkins.notifyJenkinsAboutPullRequest(data, {}, cb);

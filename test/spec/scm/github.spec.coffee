@@ -27,10 +27,12 @@ describe 'Github', () ->
 		github = githubCreate(robot, testCfg);
 
 	describe 'when new pul request comes in', () ->
-		testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
-		pr = _.merge require('../../fixtures/github_pull_request.json'), {
-			action: "opened"
-		}
+		pr = null
+
+		beforeEach ->
+			pr = _.merge require('../../fixtures/github_pull_request.json'), {
+				action: "opened"
+			}
 
 		it 'should be announce as new PR', () ->
 			cb = sinon.spy();
@@ -40,10 +42,12 @@ describe 'Github', () ->
 			expect(cb.getCall(0).args[0]).to.contain('New pull request');
 
 	describe 'when update to pull request comes in', () ->
-		testCfg = _.merge {}, require(process.env.HUBOT_CIOPERATOR_CONFIG);
-		pr = _.merge require('../../fixtures/github_pull_request.json'), {
-			action: "updated"
-		}
+		pr = null
+
+		beforeEach ->
+			pr = _.merge require('../../fixtures/github_pull_request.json'), {
+				action: "updated"
+			}
 
 		it 'should be announce as update', () ->
 			cb = sinon.spy();
